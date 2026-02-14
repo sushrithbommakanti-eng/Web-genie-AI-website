@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Website Builder</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #818cf8;
+            --accent-color: #c7d2fe;
+            --dark-color: #1e1b4b;
+            --light-color: #f5f3ff;
+            --gradient-1: linear-gradient(135deg, #4f46e5, #818cf8);
+            --gradient-2: linear-gradient(135deg, #818cf8, #c7d2fe);
+            --gradient-3: linear-gradient(135deg, #c7d2fe, #4f46e5);
+            --mesh-gradient: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.2) 0px, transparent 50%),
+                            radial-gradient(at 100% 0%, rgba(129, 140, 248, 0.2) 0px, transparent 50%),
+                            radial-gradient(at 100% 100%, rgba(199, 210, 254, 0.2) 0px, transparent 50%),
+                            radial-gradient(at 0% 100%, rgba(79, 70, 229, 0.2) 0px, transparent 50%);
+            --neon-glow: 0 0 20px rgba(79, 70, 229, 0.5);
+        }
+        
+        body {
+            background: var(--mesh-gradient);
+            min-height: 100vh;
+            perspective: 1000px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .background-3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .mesh-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--mesh-gradient);
+            opacity: 0.9;
+            mix-blend-mode: soft-light;
+            animation: meshPulse 10s infinite ease-in-out;
+        }
+
+        @keyframes meshPulse {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 0.7; }
+        }
+
+        .animated-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .line {
+            position: absolute;
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.5), transparent);
+            animation: lineFloat 8s infinite linear;
+            box-shadow: var(--neon-glow);
+        }
+
+        @keyframes lineFloat {
+            0% {
+                transform: translateY(-100%) rotate(0deg) scale(1);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateY(50vh) rotate(180deg) scale(1.5);
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: floatShape 20s infinite ease-in-out;
+            opacity: 0.8;
+            mix-blend-mode: soft-light;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--neon-glow);
+        }
+
+        .shape-1 {
+            width: 500px;
+            height: 500px;
+            top: -250px;
+            left: -250px;
+            animation-delay: 0s;
+            background: var(--gradient-1);
+            transform-origin: center;
+        }
+
+        .shape-2 {
+            width: 600px;
+            height: 600px;
+            top: 40%;
+            right: -300px;
+            animation-delay: -5s;
+            background: var(--gradient-2);
+            transform-origin: center;
+        }
+
+        .shape-3 {
+            width: 450px;
+            height: 450px;
+            bottom: -225px;
+            left: 30%;
+            animation-delay: -10s;
+            background: var(--gradient-3);
+            transform-origin: center;
+        }
+
+        .shape-4 {
+            width: 550px;
+            height: 550px;
+            top: 20%;
+            left: 20%;
+            animation-delay: -15s;
+            background: var(--gradient-1);
+            transform-origin: center;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 15s infinite linear;
+            box-shadow: var(--neon-glow);
+        }
+
+        .glow-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.2), transparent 70%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            animation: glowPulse 8s infinite ease-in-out;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; }
+        }
+
+        .interactive-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: var(--neon-glow);
+        }
+
+        .dot:hover {
+            transform: scale(3);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.8);
+        }
+
+        .floating-cube {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            animation: cubeFloat 15s infinite ease-in-out;
+            transform-style: preserve-3d;
+        }
+
+        @keyframes cubeFloat {
+            0%, 100% {
+                transform: translate(0, 0) rotateX(0) rotateY(0) rotateZ(0);
+            }
+            25% {
+                transform: translate(50px, 50px) rotateX(90deg) rotateY(45deg) rotateZ(90deg);
+            }
+            50% {
+                transform: translate(0, 100px) rotateX(180deg) rotateY(90deg) rotateZ(180deg);
+            }
+            75% {
+                transform: translate(-50px, 50px) rotateX(270deg) rotateY(135deg) rotateZ(270deg);
+            }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(0) translateX(0) scale(1);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateY(-50vh) translateX(50px) scale(1.5);
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        @keyframes floatShape {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translate(50px, 50px) rotate(90deg) scale(1.2);
+            }
+            50% {
+                transform: translate(0, 100px) rotate(180deg) scale(1);
+            }
+            75% {
+                transform: translate(-50px, 50px) rotate(270deg) scale(0.8);
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), var(--neon-glow);
+            transition: all 0.3s ease;
+        }
+
+        .glass-effect:hover {
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), var(--neon-glow);
+            transform: translateY(-5px);
+        }
+
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), var(--neon-glow);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .card-3d:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), var(--neon-glow);
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+        
+        .loading-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            max-width: 80%;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        .loading-tips {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .loading-tip {
+            display: none;
+            animation: fadeInOut 4s ease-in-out infinite;
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            20%, 80% { opacity: 1; }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #preview-frame {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        #preview-frame:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+        }
+        
+        .code-container {
+            background: #1e1e2e;
+            color: #e0e0e0;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .code-header {
+            background: #2d2d3f;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3d3d4f;
+        }
+        
+        .code-dots {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .code-dot.red { background-color: #ff5f56; }
+        .code-dot.yellow { background-color: #ffbd2e; }
+        .code-dot.green { background-color: #27c93f; }
+        
+        .code-content {
+            padding: 1rem;
+            max-height: 500px;
+            overflow: auto;
+        }
+        
+        @media (max-width: 768px) {
+            #preview-frame {
+                height: 400px;
+            }
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #preview-frame {
+                height: 300px;
+            }
+            h1 {
+                font-size: 1.75rem;
+            }
+            .text-xl {
+                font-size: 1.125rem;
+            }
+        }
+        
+        .feature-icon {
+            background: var(--gradient-1);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3), var(--neon-glow);
+            transition: all 0.3s ease;
+        }
+
+        .feature-icon:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4), var(--neon-glow);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="background-3d">
+        <div class="mesh-background"></div>
+        <div class="animated-lines"></div>
+        <div class="glow-effect"></div>
+        <div class="interactive-dots"></div>
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+        <div class="floating-shape shape-4"></div>
+    </div>
+
+    <div class="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p class="text-xl">Generating your website...</p>
+            <p class="loading-tips">This may take a minute or two. The AI is crafting your perfect website.</p>
+            <div class="loading-tip mt-2">Tip: Be specific in your description for better results</div>
+            <div class="loading-tip mt-2">Tip: The more detailed your prompt, the better the website</div>
+            <div class="loading-tip mt-2">Tip: You can always regenerate if you're not satisfied</div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="text-center mb-12 md:mb-16">
+            <div class="inline-block mb-4">
+                <div class="feature-icon floating">
+                    <i class="fas fa-code"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold text-gray-800 mb-3 md:mb-4">AI Website Builder</h1>
+            <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">Describe your website, and let AI create it for you. Transform your ideas into reality with just a few words.</p>
+        </header>
+
+        <div class="max-w-3xl mx-auto glass-effect rounded-xl p-6 md:p-8 mb-8 md:mb-12 card-3d">
+            <div class="mb-6">
+                <label for="prompt" class="block text-gray-700 text-sm font-bold mb-2">Describe your website:</label>
+                <textarea id="prompt" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300" rows="4" placeholder="Example: Create a modern portfolio website for a photographer with a dark theme, gallery section, and contact form"></textarea>
+            </div>
+            <button onclick="generateWebsite()" class="btn-primary w-full flex items-center justify-center">
+                <i class="fas fa-magic mr-2"></i> Generate Website
+            </button>
+        </div>
+
+        <div id="result" class="max-w-6xl mx-auto glass-effect rounded-xl p-6 md:p-8 hidden card-3d">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                <!-- Preview Section -->
+                <div class="order-2 lg:order-1">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-eye mr-2 text-indigo-500"></i> Live Preview
+                    </h2>
+                    <iframe id="preview-frame" class="w-full"></iframe>
+                </div>
+                
+                <!-- Code Section -->
+                <div class="order-1 lg:order-2">
+                    <div class="code-container">
+                        <div class="code-header">
+                            <div class="code-dots">
+                                <div class="code-dot red"></div>
+                                <div class="code-dot yellow"></div>
+                                <div class="code-dot green"></div>
+                            </div>
+                            <button onclick="copyToClipboard()" class="btn-secondary text-sm">
+                                <i class="fas fa-copy mr-1"></i> Copy Code
+                            </button>
+                        </div>
+                        <div class="code-content">
+                            <pre id="generatedCode" class="whitespace-pre-wrap text-xs md:text-sm font-mono"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function generateWebsite() {
+            const prompt = document.getElementById('prompt').value;
+            if (!prompt) {
+                alert('Please enter a description for your website');
+                return;
+            }
+
+            document.querySelector('.loading').style.display = 'block';
+            document.getElementById('result').classList.add('hidden');
+            
+            // Show loading tips in rotation
+            const tips = document.querySelectorAll('.loading-tip');
+            let currentTip = 0;
+            
+            tips.forEach((tip, index) => {
+                if (index === 0) tip.style.display = 'block';
+                else tip.style.display = 'none';
+            });
+            
+            const tipInterval = setInterval(() => {
+                tips[currentTip].style.display = 'none';
+                currentTip = (currentTip + 1) % tips.length;
+                tips[currentTip].style.display = 'block';
+            }, 4000);
+            
+            // Set a timeout warning
+            let timeoutWarning = null;
+            const timeoutId = setTimeout(() => {
+                timeoutWarning = document.createElement('div');
+                timeoutWarning.className = 'mt-4 text-yellow-300';
+                timeoutWarning.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> This is taking longer than usual. Please be patient...';
+                document.querySelector('.loading-content').appendChild(timeoutWarning);
+            }, 15000);
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt }),
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        ${data.css}
+    </style>
+</head>
+<body>
+    ${data.html}
+</body>
+</html>`;
+
+                    // Update the code display
+                    document.getElementById('generatedCode').textContent = fullHtml;
+                    
+                    // Update the preview iframe
+                    const previewFrame = document.getElementById('preview-frame');
+                    const previewDocument = previewFrame.contentDocument || previewFrame.contentWindow.document;
+                    previewDocument.open();
+                    previewDocument.write(fullHtml);
+                    previewDocument.close();
+                    
+                    // Show the result section with animation
+                    const resultSection = document.getElementById('result');
+                    resultSection.classList.remove('hidden');
+                    resultSection.style.opacity = '0';
+                    resultSection.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        resultSection.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                        resultSection.style.opacity = '1';
+                        resultSection.style.transform = 'translateY(0)';
+                    }, 100);
+                    
+                    // Scroll to the result section on mobile
+                    if (window.innerWidth < 1024) {
+                        resultSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error generating website: ' + error.message);
+            } finally {
+                clearInterval(tipInterval);
+                clearTimeout(timeoutId);
+                if (timeoutWarning) {
+                    timeoutWarning.remove();
+                }
+                document.querySelector('.loading').style.display = 'none';
+            }
+        }
+
+        function copyToClipboard() {
+            const code = document.getElementById('generatedCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                // Show a temporary success message
+                const copyButton = document.querySelector('.btn-secondary');
+                const originalText = copyButton.innerHTML;
+                copyButton.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+                copyButton.style.backgroundColor = '#10B981';
+                
+                setTimeout(() => {
+                    copyButton.innerHTML = originalText;
+                    copyButton.style.backgroundColor = '';
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy code: ' + err);
+            });
+        }
+        
+        // Adjust iframe height based on screen size
+        function adjustIframeHeight() {
+            const previewFrame = document.getElementById('preview-frame');
+            if (window.innerWidth < 768) {
+                previewFrame.style.height = '300px';
+            } else if (window.innerWidth < 1024) {
+                previewFrame.style.height = '400px';
+            } else {
+                previewFrame.style.height = '600px';
+            }
+        }
+        
+        // Call on load and resize
+        window.addEventListener('load', adjustIframeHeight);
+        window.addEventListener('resize', adjustIframeHeight);
+        
+        // Add 3D tilt effect to cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card-3d');
+            
+            cards.forEach(card => {
+                card.addEventListener('mousemove', function(e) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const rotateX = (y - centerY) / 20;
+                    const rotateY = (centerX - x) / 20;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+                });
+            });
+        });
+
+        // Create floating cubes
+        function createCubes() {
+            const background = document.querySelector('.background-3d');
+            for (let i = 0; i < 5; i++) {
+                const cube = document.createElement('div');
+                cube.className = 'floating-cube';
+                cube.style.left = Math.random() * 100 + 'vw';
+                cube.style.top = Math.random() * 100 + 'vh';
+                cube.style.animationDelay = Math.random() * 15 + 's';
+                background.appendChild(cube);
+            }
+        }
+
+        // Create animated lines
+        function createLines() {
+            const linesContainer = document.querySelector('.animated-lines');
+            for (let i = 0; i < 30; i++) {
+                const line = document.createElement('div');
+                line.className = 'line';
+                line.style.left = Math.random() * 100 + 'vw';
+                line.style.animationDelay = Math.random() * 8 + 's';
+                line.style.height = Math.random() * 150 + 50 + 'px';
+                linesContainer.appendChild(line);
+            }
+        }
+
+        // Create interactive dots
+        function createDots() {
+            const dotsContainer = document.querySelector('.interactive-dots');
+            for (let i = 0; i < 75; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.style.left = Math.random() * 100 + 'vw';
+                dot.style.top = Math.random() * 100 + 'vh';
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        // Create floating particles
+        function createParticles() {
+            const background = document.querySelector('.background-3d');
+            for (let i = 0; i < 75; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.opacity = Math.random() * 0.5;
+                background.appendChild(particle);
+            }
+        }
+
+        // Add parallax effect to floating shapes
+        document.addEventListener('mousemove', (e) => {
+            const shapes = document.querySelectorAll('.floating-shape');
+            const dots = document.querySelectorAll('.dot');
+            const cubes = document.querySelectorAll('.floating-cube');
+            const mouseX = e.clientX / window.innerWidth;
+            const mouseY = e.clientY / window.innerHeight;
+            
+            shapes.forEach((shape, index) => {
+                const speed = (index + 1) * 20;
+                const x = (mouseX - 0.5) * speed;
+                const y = (mouseY - 0.5) * speed;
+                const scale = 1 + (Math.sin(Date.now() * 0.001 + index) * 0.1);
+                shape.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+            });
+
+            dots.forEach((dot, index) => {
+                const rect = dot.getBoundingClientRect();
+                const dotX = rect.left + rect.width / 2;
+                const dotY = rect.top + rect.height / 2;
+                const angle = Math.atan2(e.clientY - dotY, e.clientX - dotX);
+                const distance = Math.sqrt(Math.pow(e.clientX - dotX, 2) + Math.pow(e.clientY - dotY, 2));
+                const maxDistance = 200;
+                
+                if (distance < maxDistance) {
+                    const force = (1 - distance / maxDistance) * 40;
+                    dot.style.transform = `translate(${Math.cos(angle) * force}px, ${Math.sin(angle) * force}px)`;
+                } else {
+                    dot.style.transform = 'translate(0, 0)';
+                }
+            });
+
+            cubes.forEach((cube, index) => {
+                const speed = (index + 1) * 15;
+                const x = (mouseX - 0.5) * speed;
+                const y = (mouseY - 0.5) * speed;
+                cube.style.transform = `translate(${x}px, ${y}px) rotateX(${y}deg) rotateY(${x}deg)`;
+            });
+        });
+
+        // Initialize all effects on load
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            createLines();
+            createDots();
+            createCubes();
+        });
+    </script>
+</body>
+</html>

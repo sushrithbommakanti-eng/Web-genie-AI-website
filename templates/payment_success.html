@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='subscription.css') }}">
+    <style>
+        .success-container {
+            text-align: center;
+            padding: 50px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .success-icon {
+            color: #4CAF50;
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: scale 1s ease-in-out;
+        }
+
+        .success-message {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .plan-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .redirect-message {
+            color: #666;
+            margin-top: 20px;
+        }
+
+        @keyframes scale {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .loading-dots {
+            display: inline-block;
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <i class="fas fa-check-circle success-icon"></i>
+        <h1 class="success-message">Payment Successful!</h1>
+        
+        <div class="plan-details">
+            <h2>Subscription Details</h2>
+            <p>Plan: <strong>{{ plan|title }}</strong></p>
+            <p>Payment ID: <strong>{{ payment_id }}</strong></p>
+            <p>Amount: <strong>₹{{ amount }}</strong></p>
+        </div>
+
+        <p class="redirect-message">
+            Redirecting to dashboard<span class="loading-dots"></span>
+        </p>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            window.location.href = "{{ url_for('dashboard') }}";
+        }, 3000);
+    </script>
+</body>
+</html> 

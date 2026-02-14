@@ -1,0 +1,55 @@
+<!-- templates/verify_otp.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Verify OTP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Bubble Canvas -->
+    <canvas id="bubble-canvas"></canvas>
+    
+    <div class="container card-3d">
+        <h1 class="floating">Verify OTP</h1>
+        <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-color);">
+            Enter the OTP sent to {{ email }}
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="otp">OTP Code</label>
+                <input type="text" id="otp" name="otp" required placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}">
+            </div>
+            
+            <button type="submit" class="floating">Verify OTP</button>
+        </form>
+    </div>
+
+    <script src="{{ url_for('static', filename='bubbles.js') }}"></script>
+    <script>
+        // Add 3D tilt effect to the container
+        const container = document.querySelector('.container');
+        
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            
+            container.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+    </script>
+</body>
+</html>

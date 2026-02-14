@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}AI Website Generator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">AI Website Generator</h2>
+                </div>
+                <div class="card-body">
+                    <form id="websiteForm" class="mb-4">
+                        <div class="mb-3">
+                            <label for="prompt" class="form-label">Describe your website</label>
+                            <textarea class="form-control" id="prompt" rows="4" required 
+                                    placeholder="Describe the website you want to create. Include details about the purpose, style, and any specific features you want."></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-magic"></i> Generate Website
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="resultSection" style="display: none;">
+                        <h4 class="mb-3">Generated Website Preview</h4>
+                        <div class="preview-container border rounded p-3 mb-3" style="height: 400px; overflow: auto;">
+                            <iframe id="previewFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-success me-2" onclick="downloadFiles()">
+                                <i class="fas fa-download"></i> Download Files
+                            </button>
+                            <button class="btn btn-primary" onclick="generateNew()">
+                                <i class="fas fa-plus"></i> Generate New Website
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let generatedHTML = '';
+let generatedCSS = '';
+
+document.getElementById('websiteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const prompt = document.getElementById('prompt').value;
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    
+    // Disable button and show loading state
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+    
+    try {
+        const response = await fetch('/generate-website', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ prompt: prompt })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            generatedHTML = data.html;
+            generatedCSS = data.css;
+            
+            // Create preview
+            const previewDoc = document.getElementById('previewFrame').contentDocument;
+            previewDoc.open();
+            previewDoc.write(`
+                <html>
+                <head>
+                    <style>${generatedCSS}</style>
+                </head>
+                <body>${generatedHTML}</body>
+                </html>
+            `);
+            previewDoc.close();
+            
+            // Show result section
+            document.getElementById('websiteForm').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'block';
+        } else {
+            alert('Error generating website: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while generating the website.');
+    } finally {
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-magic"></i> Generate Website';
+    }
+});
+
+function generateNew() {
+    document.getElementById('prompt').value = '';
+    document.getElementById('websiteForm').style.display = 'block';
+    document.getElementById('resultSection').style.display = 'none';
+}
+
+function downloadFiles() {
+    // Create HTML file
+    const htmlBlob = new Blob([generatedHTML], { type: 'text/html' });
+    const htmlUrl = URL.createObjectURL(htmlBlob);
+    const htmlLink = document.createElement('a');
+    htmlLink.href = htmlUrl;
+    htmlLink.download = 'index.html';
+    htmlLink.click();
+    
+    // Create CSS file
+    const cssBlob = new Blob([generatedCSS], { type: 'text/css' });
+    const cssUrl = URL.createObjectURL(cssBlob);
+    const cssLink = document.createElement('a');
+    cssLink.href = cssUrl;
+    cssLink.download = 'styles.css';
+    cssLink.click();
+}
+</script>
+{% endblock %} 

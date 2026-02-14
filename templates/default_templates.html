@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Default Templates - AI Website Builder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f0ff 0%, #ffffff 100%);
+            min-height: 100vh;
+            color: #2d3748;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 1.5rem 2rem;
+            background: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .breadcrumb-links {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .breadcrumb a {
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .breadcrumb a:hover {
+            color: #4169E1;
+        }
+
+        .breadcrumb span {
+            color: #718096;
+            margin: 0 0.5rem;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            background: #4169E1;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(65, 105, 225, 0.2);
+        }
+
+        .back-btn:hover {
+            background: #3451b4;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(65, 105, 225, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            padding: 5rem 2rem;
+            text-align: center;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f0ff 0%, #ffffff 100%);
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin: 0;
+            background: linear-gradient(135deg, #4169E1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            color: #4a5568;
+            font-size: 1.25rem;
+            max-width: 800px;
+            margin: 1.5rem auto;
+            line-height: 1.6;
+        }
+
+        /* Category Filter */
+        .category-filter {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            padding: 0 2rem;
+        }
+
+        .category-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            color: #4a5568;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .category-btn.active {
+            color: #1a73e8;
+            font-weight: 600;
+        }
+
+        .category-btn:hover {
+            color: #1a73e8;
+        }
+
+        /* Quick Links */
+        .quick-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            padding: 0 2rem;
+        }
+
+        .quick-link {
+            background: white;
+            color: #4169E1;
+            padding: 0.6rem 1.5rem;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .quick-link:hover {
+            background: #4169E1;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(65, 105, 225, 0.2);
+        }
+
+        /* Template Cards */
+        .templates-container {
+            max-width: 1400px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2.5rem;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .template-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease, transform 0.4s cubic-bezier(.25,.8,.25,1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            will-change: transform;
+            perspective: 800px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .template-preview {
+            position: relative;
+            width: 100%;
+            padding-top: 75%; /* 4:3 aspect ratio */
+            overflow: hidden;
+            background: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .template-preview iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            transform: scale(1);
+            transition: transform 0.3s ease;
+            pointer-events: none; /* Prevents iframe interaction in preview */
+        }
+
+        .template-info {
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .template-card:hover .template-info {
+            transform: translateY(0);
+        }
+
+        .template-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin: 0;
+        }
+
+        .template-category {
+            font-size: 0.875rem;
+            color: #4a5568;
+            margin-top: 0.25rem;
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(74, 85, 104, 0.1);
+            border-radius: 20px;
+        }
+
+        .preview-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #4169E1;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .template-card:hover .preview-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .preview-btn:hover {
+            background: #4169E1;
+            color: white;
+        }
+
+        /* Error and Loading States */
+        .error, .no-templates {
+            text-align: center;
+            padding: 2rem;
+            color: #4a5568;
+            font-size: 1.1rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .templates-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 1.5rem;
+                padding: 1rem;
+            }
+
+            .template-card .template-preview {
+                height: 200px;
+            }
+
+            .category-filter, .quick-links {
+                gap: 0.8rem;
+            }
+
+            .category-btn, .quick-link {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 0;
+            width: 95%;
+            max-width: 1600px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .close {
+            position: fixed;
+            right: 2rem;
+            top: 2rem;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .close:hover {
+            background: #4169E1;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .customize-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 0;
+            height: 90vh;
+        }
+
+        .customize-form {
+            background: #f8fafc;
+            padding: 1.5rem;
+            height: 100%;
+            overflow-y: auto;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="color"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .color-picker-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .color-picker-group input[type="color"] {
+            width: 50px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .color-value {
+            font-family: monospace;
+            padding: 0.5rem;
+            background: #f1f5f9;
+            border-radius: 4px;
+            color: #64748b;
+        }
+
+        .preview-container {
+            background: white;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-toolbar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 10;
+        }
+
+        .preview-toolbar button {
+            background: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-toolbar button:hover {
+            background: #f8fafc;
+        }
+
+        .preview-size-options {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .preview-size-option {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            background: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .preview-size-option.active {
+            background: white;
+            color: #2d3748;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Template-specific customization fields */
+        .template-specific-options {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .template-specific-options h3 {
+            color: #2d3748;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .option-group {
+            margin-bottom: 1rem;
+        }
+
+        .option-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .option-group select,
+        .option-group input {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .save-btn {
+            background: #4169E1;
+            color: white;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .save-btn:hover {
+            background: #3451b4;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(65, 105, 225, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .customize-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .customize-form {
+                max-height: 50vh;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .preview-container {
+                height: 50vh;
+            }
+        }
+
+        /* Loading State */
+        .template-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            z-index: 1;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .template-preview.loaded::before {
+            display: none;
+        }
+
+        .no-templates {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin: 2rem auto;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .no-templates h2 {
+            color: #2d3748;
+            margin: 0.5rem 0;
+            font-size: 1.5rem;
+        }
+        .no-templates p {
+            color: #718096;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <div class="breadcrumb-links">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <span>/</span>
+            <span style="color: #4169E1;">Default Templates</span>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <img src="{{ url_for('static', filename='images/statue-left.svg') }}" alt="" class="statue-left">
+        <img src="{{ url_for('static', filename='images/statue-right.svg') }}" alt="" class="statue-right">
+        <div class="hero-content">
+            <h1>AI Website Builder: <span>Create Your Website Faster Than Ever</span></h1>
+            <p>Renderforest AI Website Builder creates professional, responsive sites in minutes! No coding, all AI-powered. Generate, customize, launch - it's that easy!</p>
+        </div>
+    </section>
+
+    <!-- Quick Links -->
+    <div class="quick-links">
+        <a href="#" class="quick-link">Marketing</a>
+        <a href="#" class="quick-link">Online courses</a>
+        <a href="#" class="quick-link">Art & Design</a>
+        <a href="#" class="quick-link">Real Estate</a>
+        <a href="#" class="quick-link">Mental Health</a>
+        <a href="#" class="quick-link">Yoga</a>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="category-filter">
+        <button class="category-btn active" data-category="all">All Templates</button>
+        <button class="category-btn" data-category="Business">Business</button>
+        <button class="category-btn" data-category="Portfolio">Portfolio</button>
+        <button class="category-btn" data-category="E-commerce">E-commerce</button>
+        <button class="category-btn" data-category="Restaurant">Restaurant</button>
+        <button class="category-btn" data-category="Blog">Blog</button>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="templates-container">
+        <div id="templates-list" class="templates-grid"></div>
+    </div>
+
+    <!-- Customize Modal -->
+    <div id="customizeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCustomizeModal()">&times;</span>
+            <h2>Customize Template</h2>
+            
+            <div class="customize-container">
+                <div class="customize-form">
+                    <div class="form-group">
+                        <label for="templateName">Template Name:</label>
+                        <input type="text" id="templateName" placeholder="Enter a name for your template">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="siteTitle">Site Title:</label>
+                        <input type="text" id="siteTitle" placeholder="Enter site title">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="siteDescription">Site Description:</label>
+                        <textarea id="siteDescription" placeholder="Enter site description"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="additionalContent">Additional Content:</label>
+                        <textarea id="additionalContent" placeholder="Enter additional content"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="primaryColor">Primary Color:</label>
+                        <input type="color" id="primaryColor" value="#007bff">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="secondaryColor">Secondary Color:</label>
+                        <input type="color" id="secondaryColor" value="#6c757d">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="fontFamily">Font Family:</label>
+                        <select id="fontFamily">
+                            <option value="Arial">Arial</option>
+                            <option value="Helvetica">Helvetica</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Verdana">Verdana</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="saveCustomizedTemplate()" class="save-btn">Save Template</button>
+                </div>
+                
+                <div class="preview-container">
+                    <h3>Live Preview</h3>
+                    <iframe id="templatePreview" class="template-preview"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Template Loading and Filtering
+        let allTemplates = [];
+        let activeCategory = 'all';
+
+        // Function to load templates from the server
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/default-templates');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch templates');
+                }
+                allTemplates = await response.json();
+                renderTemplates();
+            } catch (error) {
+                console.error('Error loading templates:', error);
+                document.getElementById('templates-list').innerHTML = '<p class="error">Failed to load templates. Please try again later.</p>';
+            }
+        }
+
+        // Function to render templates based on active category
+        function renderTemplates() {
+            const templatesContainer = document.getElementById('templates-list');
+            const filteredTemplates = activeCategory === 'all' 
+                ? allTemplates 
+                : allTemplates.filter(t => t.category.includes(activeCategory));
+
+            if (filteredTemplates.length === 0) {
+                templatesContainer.innerHTML = `
+                    <div class="no-templates">
+                        <i class="fas fa-box-open" style="font-size: 3rem; color: #4a5568; margin-bottom: 1rem;"></i>
+                        <h2>No Templates Available</h2>
+                        <p>There are currently no templates in the ${activeCategory === 'all' ? 'library' : activeCategory + ' category'}.</p>
+                    </div>`;
+                return;
+            }
+
+            templatesContainer.innerHTML = filteredTemplates.map(template => `
+                <div class="template-card" data-category="${template.category}">
+                    <div class="template-preview">
+                        <iframe sandbox="allow-scripts" srcdoc="
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <style>
+                                    ${template.css}
+                                    body { 
+                                        margin: 0; 
+                                        padding: 0;
+                                        height: 100vh;
+                                        overflow: hidden;
+                                        transform: scale(0.95);
+                                        transform-origin: center center;
+                                    }
+                                </style>
+                            </head>
+                            <body>
+                                ${template.html}
+                            </body>
+                            </html>
+                        "></iframe>
+                    </div>
+                    <div class="template-info">
+                        <h3 class="template-title">${template.name}</h3>
+                        <div class="template-category">${template.category}</div>
+                    </div>
+                    <button class="preview-btn" onclick="openCustomizeModal('${template.name}', ${JSON.stringify(template.html)}, ${JSON.stringify(template.css)})">
+                        Customize
+                    </button>
+                </div>
+            `).join('');
+
+            // Add loading state handler
+            document.querySelectorAll('.template-preview iframe').forEach(iframe => {
+                iframe.onload = function() {
+                    this.parentElement.classList.add('loaded');
+                };
+            });
+        }
+
+        // Category Filter Handling
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeCategory = btn.dataset.category;
+                renderTemplates();
+            });
+        });
+
+        // Quick Links Handling
+        document.querySelectorAll('.quick-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const category = link.textContent.trim();
+                // Find and click the corresponding category button
+                const categoryBtn = Array.from(document.querySelectorAll('.category-btn'))
+                    .find(btn => btn.textContent.trim() === category);
+                if (categoryBtn) {
+                    categoryBtn.click();
+                }
+            });
+        });
+
+        // Initialize templates on page load
+        document.addEventListener('DOMContentLoaded', loadTemplates);
+
+        // Template Customization Modal Functions
+        function openCustomizeModal(templateName, templateHtml, templateCss) {
+            const modal = document.getElementById('customizeModal');
+            currentTemplate = allTemplates.find(t => t.name === templateName);
+            
+            // Reset form fields
+            document.getElementById('templateName').value = templateName;
+            document.getElementById('siteTitle').value = '';
+            document.getElementById('siteDescription').value = '';
+            document.getElementById('additionalContent').value = '';
+            document.getElementById('primaryColor').value = '#4169E1';
+            document.getElementById('secondaryColor').value = '#6c757d';
+            document.getElementById('fontFamily').value = 'Inter';
+            
+            // Show modal
+            modal.style.display = 'block';
+            
+            // Update preview
+            updatePreview();
+
+            // Add template-specific options if needed
+            const templateSpecificOptions = document.createElement('div');
+            templateSpecificOptions.className = 'template-specific-options';
+            templateSpecificOptions.innerHTML = getTemplateSpecificOptions(currentTemplate.category);
+            document.querySelector('.customize-form').appendChild(templateSpecificOptions);
+        }
+
+        function closeCustomizeModal() {
+            document.getElementById('customizeModal').style.display = 'none';
+        }
+
+        function updatePreview() {
+            if (!currentTemplate) return;
+
+            const templateName = document.getElementById('templateName').value;
+            const siteTitle = document.getElementById('siteTitle').value;
+            const siteDescription = document.getElementById('siteDescription').value;
+            const additionalContent = document.getElementById('additionalContent').value;
+            const primaryColor = document.getElementById('primaryColor').value;
+            const secondaryColor = document.getElementById('secondaryColor').value;
+            const fontFamily = document.getElementById('fontFamily').value;
+
+            // Create template-specific content based on category
+            let processedContent = additionalContent;
+            if (currentTemplate.category === "Business") {
+                processedContent = `
+                    <div class="service-item">
+                        <h3>${additionalContent || 'Our Services'}</h3>
+                        <p>Click to edit and add your services</p>
+                    </div>
+                `;
+            } else if (currentTemplate.category === "Portfolio") {
+                processedContent = `
+                    <div class="portfolio-item">
+                        <img src="https://via.placeholder.com/400x300" alt="Portfolio item">
+                        <h3>${additionalContent || 'Project Title'}</h3>
+                    </div>
+                `;
+            }
+
+            let customizedHtml = currentTemplate.html
+                .replace('{{siteTitle}}', siteTitle || 'Your Site Title')
+                .replace('{{siteDescription}}', siteDescription || 'Your site description')
+                .replace('{{additionalContent}}', processedContent);
+
+            // Create the preview document with custom styles
+            const previewDoc = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        :root {
+                            --primary-color: ${primaryColor};
+                            --secondary-color: ${secondaryColor};
+                            --font-family: ${fontFamily}, sans-serif;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            font-family: var(--font-family);
+                        }
+                        ${currentTemplate.css}
+                    </style>
+                </head>
+                <body>
+                    ${customizedHtml}
+                </body>
+                </html>
+            `;
+
+            // Update preview iframe
+            const previewFrame = document.getElementById('templatePreview');
+            previewFrame.srcdoc = previewDoc;
+        }
+
+        function getTemplateSpecificOptions(category) {
+            switch(category) {
+                case 'Business':
+                    return `
+                        <h3>Business Options</h3>
+                        <div class="option-group">
+                            <label>Number of Services</label>
+                            <select onchange="updatePreview()">
+                                <option value="3">3 Services</option>
+                                <option value="4">4 Services</option>
+                                <option value="6">6 Services</option>
+                            </select>
+                        </div>
+                    `;
+                case 'Portfolio':
+                    return `
+                        <h3>Portfolio Options</h3>
+                        <div class="option-group">
+                            <label>Layout Style</label>
+                            <select onchange="updatePreview()">
+                                <option value="grid">Grid Layout</option>
+                                <option value="masonry">Masonry Layout</option>
+                                <option value="carousel">Carousel Layout</option>
+                            </select>
+                        </div>
+                    `;
+                case 'Restaurant':
+                    return `
+                        <h3>Restaurant Options</h3>
+                        <div class="option-group">
+                            <label>Menu Style</label>
+                            <select onchange="updatePreview()">
+                                <option value="grid">Grid Menu</option>
+                                <option value="list">List Menu</option>
+                                <option value="cards">Card Menu</option>
+                            </select>
+                        </div>
+                    `;
+                default:
+                    return '';
+            }
+        }
+
+        // Preview size controls
+        const previewSizes = {
+            desktop: '100%',
+            tablet: '768px',
+            mobile: '375px'
+        };
+
+        function changePreviewSize(size) {
+            const preview = document.getElementById('templatePreview');
+            preview.style.width = previewSizes[size];
+            document.querySelectorAll('.preview-size-option').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.size === size);
+            });
+        }
+
+        async function saveCustomizedTemplate() {
+            try {
+                const templateData = {
+                    templateName: document.getElementById('templateName').value,
+                    siteTitle: document.getElementById('siteTitle').value,
+                    siteDescription: document.getElementById('siteDescription').value,
+                    additionalContent: document.getElementById('additionalContent').value,
+                    primaryColor: document.getElementById('primaryColor').value,
+                    secondaryColor: document.getElementById('secondaryColor').value,
+                    fontFamily: document.getElementById('fontFamily').value,
+                    templateHtml: document.getElementById('templatePreview').srcdoc
+                };
+
+                const response = await fetch('/save-customized-template', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(templateData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to save template');
+                }
+
+                const result = await response.json();
+                showNotification('success', 'Template saved successfully!');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error saving template:', error);
+                showNotification('error', error.message || 'Failed to save template. Please try again.');
+            }
+        }
+
+        // Notification system
+        function showNotification(type, message) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Event listeners for real-time preview updates
+        document.querySelectorAll('#customizeModal input, #customizeModal textarea, #customizeModal select').forEach(input => {
+            input.addEventListener('input', updatePreview);
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('customizeModal');
+            if (event.target === modal) {
+                closeCustomizeModal();
+            }
+        });
+
+        // Initialize current template variable
+        let currentTemplate = null;
+
+        // Enhanced 3D tilt effect for template cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.template-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('mousemove', function(e) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const rotateX = ((y - centerY) / centerY) * 4; // Reduced to 4deg
+                    const rotateY = ((x - centerX) / centerX) * 6; // Reduced to 6deg
+                    
+                    card.style.transform = `
+                        perspective(1000px)
+                        rotateX(${-rotateX}deg)
+                        rotateY(${rotateY}deg)
+                        scale3d(1.02, 1.02, 1.02)
+                    `;
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="600" viewBox="0 0 400 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="statue-gradient" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#E6E6FA;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#F8F8FF;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <!-- Base statue shape -->
+    <path d="M200 50C150 50 120 100 120 150C120 200 150 250 200 300C250 250 280 200 280 150C280 100 250 50 200 50Z" fill="url(#statue-gradient)" transform="rotate(15 200 300)"/>
+    <!-- Neck and shoulders -->
+    <path d="M160 300C160 350 180 380 200 400C220 380 240 350 240 300C240 280 220 260 200 260C180 260 160 280 160 300Z" fill="url(#statue-gradient)" transform="rotate(15 200 300)"/>
+    <!-- Body -->
+    <path d="M140 400C140 500 180 550 200 600C220 550 260 500 260 400C260 350 230 320 200 320C170 320 140 350 140 400Z" fill="url(#statue-gradient)" transform="rotate(15 200 300)"/>
+    <!-- Details -->
+    <path d="M180 150C180 160 190 170 200 170C210 170 220 160 220 150C220 140 210 130 200 130C190 130 180 140 180 150Z" fill="#E6E6FA" transform="rotate(15 200 300)"/>
+    <!-- Additional decorative element -->
+    <circle cx="200" cy="200" r="10" fill="#FFB6C1" opacity="0.5"/>
+</svg> 

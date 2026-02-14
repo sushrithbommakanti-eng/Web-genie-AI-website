@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .password-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .password-strength {
+            margin-top: 5px;
+            height: 5px;
+            background: #ddd;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+        
+        .password-strength-text {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #666;
+        }
+        
+        .password-requirements {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .requirement {
+            margin: 3px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .requirement.valid {
+            color: #4CAF50;
+        }
+        
+        .requirement.invalid {
+            color: #f44336;
+        }
+        
+        .requirement::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 8px;
+            border-radius: 50%;
+            background-color: #ddd;
+        }
+        
+        .requirement.valid::before {
+            background-color: #4CAF50;
+        }
+        
+        .requirement.invalid::before {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <!-- Bubble Canvas -->
+    <canvas id="bubble-canvas"></canvas>
+    
+    <div class="container card-3d">
+        <div class="auth-toggle">
+            <button id="login-toggle" class="toggle-btn active">Login</button>
+            <button id="signup-toggle" class="toggle-btn">Sign Up</button>
+        </div>
+        
+        <h1 class="floating" id="form-title">Login</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('register') }}" id="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-container">
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <span class="password-toggle" onclick="togglePassword('password')">👁️</span>
+                </div>
+                <div class="password-strength"></div>
+                <div class="password-strength-text"></div>
+                <div class="password-requirements">
+                    <div class="requirement" id="length">At least 8 characters</div>
+                    <div class="requirement" id="uppercase">At least one uppercase letter</div>
+                    <div class="requirement" id="lowercase">At least one lowercase letter</div>
+                    <div class="requirement" id="number">At least one number</div>
+                    <div class="requirement" id="special">At least one special character</div>
+                </div>
+            </div>
+            
+            <div class="form-group signup-only" style="display: none;">
+                <label for="confirm-password">Confirm Password</label>
+                <div class="password-container">
+                    <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm your password">
+                    <span class="password-toggle" onclick="togglePassword('confirm-password')">👁️</span>
+                </div>
+                <div id="password-match-message" style="font-size: 12px; margin-top: 5px;"></div>
+            </div>
+            
+            <div class="form-group signup-only" style="display: none;">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" placeholder="Enter your full name">
+            </div>
+            
+            <button type="submit" class="floating" id="submit-btn">Login</button>
+        </form>
+        
+        <div class="form-footer">
+            <p class="signup-only" style="display: none;">Already have an account? <a href="#" id="switch-to-login">Login</a></p>
+            <p class="login-only">Don't have an account? <a href="#" id="switch-to-signup">Sign Up</a></p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='bubbles.js') }}"></script>
+    <script>
+        // Add 3D tilt effect to the container
+        const container = document.querySelector('.container');
+        
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            
+            container.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+        
+        // Toggle between login and signup
+        const loginToggle = document.getElementById('login-toggle');
+        const signupToggle = document.getElementById('signup-toggle');
+        const formTitle = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const authForm = document.getElementById('auth-form');
+        const signupOnlyElements = document.querySelectorAll('.signup-only');
+        const loginOnlyElements = document.querySelectorAll('.login-only');
+        const switchToLogin = document.getElementById('switch-to-login');
+        const switchToSignup = document.getElementById('switch-to-signup');
+        
+        // Ensure all input fields are enabled
+        function enableInputFields() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.disabled = false;
+                input.readOnly = false;
+            });
+        }
+        
+        function showLogin() {
+            formTitle.textContent = 'Login';
+            submitBtn.textContent = 'Login';
+            authForm.action = "{{ url_for('register') }}";
+            
+            signupOnlyElements.forEach(el => el.style.display = 'none');
+            loginOnlyElements.forEach(el => el.style.display = 'block');
+            
+            loginToggle.classList.add('active');
+            signupToggle.classList.remove('active');
+            
+            // Make signup fields not required
+            document.getElementById('confirm-password').removeAttribute('required');
+            document.getElementById('name').removeAttribute('required');
+            
+            // Enable all input fields
+            enableInputFields();
+        }
+        
+        function showSignup() {
+            formTitle.textContent = 'Sign Up';
+            submitBtn.textContent = 'Sign Up';
+            authForm.action = "{{ url_for('signup') }}";
+            
+            signupOnlyElements.forEach(el => el.style.display = 'block');
+            loginOnlyElements.forEach(el => el.style.display = 'none');
+            
+            loginToggle.classList.remove('active');
+            signupToggle.classList.add('active');
+            
+            // Make signup fields required
+            document.getElementById('confirm-password').setAttribute('required', '');
+            document.getElementById('name').setAttribute('required', '');
+            
+            // Enable all input fields
+            enableInputFields();
+        }
+        
+        // Initialize form state
+        document.addEventListener('DOMContentLoaded', () => {
+            enableInputFields();
+            if (loginToggle.classList.contains('active')) {
+                showLogin();
+            } else {
+                showSignup();
+            }
+        });
+        
+        loginToggle.addEventListener('click', showLogin);
+        signupToggle.addEventListener('click', showSignup);
+        switchToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLogin();
+        });
+        switchToSignup.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSignup();
+        });
+        
+        // Password validation
+        function validatePassword(password) {
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+            };
+            
+            // Update requirement indicators
+            Object.keys(requirements).forEach(req => {
+                const element = document.getElementById(req);
+                if (requirements[req]) {
+                    element.classList.add('valid');
+                    element.classList.remove('invalid');
+                } else {
+                    element.classList.add('invalid');
+                    element.classList.remove('valid');
+                }
+            });
+            
+            // Calculate password strength
+            const strength = Object.values(requirements).filter(Boolean).length;
+            const strengthBar = document.querySelector('.password-strength');
+            const strengthText = document.querySelector('.password-strength-text');
+            
+            switch(strength) {
+                case 0:
+                case 1:
+                    strengthBar.style.width = '20%';
+                    strengthBar.style.backgroundColor = '#f44336';
+                    strengthText.textContent = 'Very Weak';
+                    strengthText.style.color = '#f44336';
+                    break;
+                case 2:
+                    strengthBar.style.width = '40%';
+                    strengthBar.style.backgroundColor = '#FF9800';
+                    strengthText.textContent = 'Weak';
+                    strengthText.style.color = '#FF9800';
+                    break;
+                case 3:
+                    strengthBar.style.width = '60%';
+                    strengthBar.style.backgroundColor = '#FFC107';
+                    strengthText.textContent = 'Medium';
+                    strengthText.style.color = '#FFC107';
+                    break;
+                case 4:
+                    strengthBar.style.width = '80%';
+                    strengthBar.style.backgroundColor = '#8BC34A';
+                    strengthText.textContent = 'Strong';
+                    strengthText.style.color = '#8BC34A';
+                    break;
+                case 5:
+                    strengthBar.style.width = '100%';
+                    strengthBar.style.backgroundColor = '#4CAF50';
+                    strengthText.textContent = 'Very Strong';
+                    strengthText.style.color = '#4CAF50';
+                    break;
+            }
+            
+            return Object.values(requirements).every(Boolean);
+        }
+        
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const toggle = input.parentElement.querySelector('.password-toggle');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggle.textContent = '🔒';
+            } else {
+                input.type = 'password';
+                toggle.textContent = '👁️';
+            }
+        }
+        
+        // Check password match
+        function checkPasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const matchMessage = document.getElementById('password-match-message');
+            
+            if (confirmPassword) {
+                if (password === confirmPassword) {
+                    matchMessage.textContent = 'Passwords match';
+                    matchMessage.style.color = '#4CAF50';
+                } else {
+                    matchMessage.textContent = 'Passwords do not match';
+                    matchMessage.style.color = '#f44336';
+                }
+            } else {
+                matchMessage.textContent = '';
+            }
+        }
+        
+        // Add event listeners
+        document.getElementById('password').addEventListener('input', function() {
+            validatePassword(this.value);
+            checkPasswordMatch();
+        });
+        
+        document.getElementById('confirm-password').addEventListener('input', checkPasswordMatch);
+        
+        // Form submission validation
+        document.getElementById('auth-form').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (signupToggle.classList.contains('active')) {
+                if (!validatePassword(password)) {
+                    e.preventDefault();
+                    alert('Please ensure your password meets all requirements.');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    e.preventDefault();
+                    alert('Passwords do not match.');
+                    return;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

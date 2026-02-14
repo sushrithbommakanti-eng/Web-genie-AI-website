@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Plans</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='subscription.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .subscription-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subscription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .subscription-header h1 {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin: 0;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(253, 187, 45, 0.8);
+            color: #1a2a6c;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: rgba(253, 187, 45, 1);
+        }
+
+        .flash-messages {
+            margin-bottom: 2rem;
+        }
+
+        .flash-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .flash-message.success {
+            background: rgba(46, 213, 115, 0.3);
+            border: 1px solid rgba(46, 213, 115, 0.5);
+        }
+
+        .flash-message.error {
+            background: rgba(255, 71, 87, 0.3);
+            border: 1px solid rgba(255, 71, 87, 0.5);
+        }
+
+        .subscription-plans {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .plan-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .plan-card.featured {
+            border: 2px solid #fdbb2d;
+            transform: scale(1.05);
+        }
+
+        .plan-card.featured:hover {
+            transform: translateY(-5px) scale(1.07);
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(253, 187, 45, 0.8);
+            color: #1a2a6c;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .plan-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-header h2 {
+            color: white;
+            margin: 0 0 1rem 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            color: white;
+        }
+
+        .currency {
+            font-size: 1.5rem;
+            margin-right: 0.25rem;
+        }
+
+        .amount {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .duration {
+            font-size: 1rem;
+            margin-left: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 2rem 0;
+        }
+
+        .plan-features li {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .plan-features i {
+            color: #fdbb2d;
+            margin-right: 0.75rem;
+        }
+
+        .subscribe-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(253, 187, 45, 0.8);
+            color: #1a2a6c;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .subscribe-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: rgba(253, 187, 45, 1);
+        }
+
+        /* Payment Modal Styles */
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .payment-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .payment-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .payment-modal-header h2 {
+            margin: 0;
+            color: #1a2a6c;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .payment-details {
+            margin-bottom: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #fdbb2d #f1f1f1;
+        }
+
+        .payment-details::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .payment-details::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .payment-details::-webkit-scrollbar-thumb {
+            background: #fdbb2d;
+            border-radius: 10px;
+        }
+
+        .payment-details::-webkit-scrollbar-thumb:hover {
+            background: #f5b01d;
+        }
+
+        .proceed-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: #fdbb2d;
+            color: #1a2a6c;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .proceed-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: #f5b01d;
+        }
+
+        /* Payment Confirmation Styles */
+        .payment-confirmation {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .confirmation-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .confirmation-success {
+            color: #2ecc71;
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .confirmation-error {
+            color: #e74c3c;
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .confirmation-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .confirmation-details {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .confirmation-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .confirmation-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-dashboard {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-receipt {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-try-again {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .confirmation-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .confirmation-actions {
+                flex-direction: column;
+            }
+            .confirmation-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Add these styles after your existing CSS */
+        .card-payment-section {
+            display: none;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .card-payment-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .form-group.half {
+            flex: 1;
+        }
+
+        .card-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-type-icon {
+            position: absolute;
+            right: 1rem;
+            color: #7f8c8d;
+        }
+
+        .cvv-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .cvv-info {
+            position: absolute;
+            right: 1rem;
+            color: #7f8c8d;
+            cursor: help;
+        }
+
+        .card-payment-section input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .card-payment-section input:focus {
+            outline: none;
+            border-color: #fdbb2d;
+            box-shadow: 0 0 0 3px rgba(253, 187, 45, 0.2);
+        }
+
+        #card-number {
+            padding-right: 3rem;
+        }
+
+        #cvv {
+            padding-right: 2.5rem;
+        }
+
+        /* Card type indicators */
+        .card-type-icon i {
+            font-size: 1.2rem;
+        }
+
+        .card-type-icon i.fa-cc-visa { color: #1a1f71; }
+        .card-type-icon i.fa-cc-mastercard { color: #eb001b; }
+        .card-type-icon i.fa-cc-amex { color: #006fcf; }
+        .card-type-icon i.fa-cc-discover { color: #ff6000; }
+
+        /* Common styles for payment methods */
+        .payment-method {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .payment-content {
+            display: none;
+            width: 100%;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .payment-method.selected .payment-content {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .payment-method-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .payment-method-header i {
+            font-size: 1.5rem;
+            color: #1a2a6c;
+        }
+
+        .payment-method-header span {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .payment-method.selected {
+            border-color: #fdbb2d;
+        }
+
+        .payment-method.selected .payment-content {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        /* UPI specific styles */
+        .upi-section {
+            text-align: center;
+        }
+
+        .upi-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+
+        .qr-container {
+            max-width: 250px;
+            margin: 0 auto 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-code {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .upi-details {
+            margin: 1.5rem 0;
+        }
+
+        .upi-id-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .upi-id {
+            background: rgba(253, 187, 45, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #1a2a6c;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #fdbb2d;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            color: #f5b01d;
+            transform: scale(1.1);
+        }
+
+        .payment-amount {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+
+        .payment-amount p {
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .amount {
+            font-weight: 600;
+            color: #1a2a6c;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .qr-container {
+                max-width: 200px;
+            }
+        }
+
+        /* Scrollable content styles */
+        .scrollable-content {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 1.5rem;
+            scrollbar-width: thin;
+            scrollbar-color: #fdbb2d #f1f1f1;
+        }
+
+        .scrollable-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: #fdbb2d;
+            border-radius: 10px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb:hover {
+            background: #f5b01d;
+        }
+
+        /* Bank options styles */
+        .bank-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .bank-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bank-option:hover {
+            border-color: #fdbb2d;
+            background: rgba(253, 187, 45, 0.1);
+        }
+
+        .bank-option img {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Wallet options styles */
+        .wallet-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .wallet-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .wallet-option:hover {
+            border-color: #fdbb2d;
+            background: rgba(253, 187, 45, 0.1);
+        }
+
+        .wallet-option img {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Bank select styles */
+        .bank-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .bank-select:focus {
+            outline: none;
+            border-color: #fdbb2d;
+        }
+
+        /* UPI specific styles */
+        .upi-instructions {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .upi-instructions h4 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .upi-instructions ol {
+            padding-left: 1.5rem;
+        }
+
+        .upi-instructions li {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .scrollable-content {
+                max-height: 250px;
+            }
+
+            .bank-options,
+            .wallet-options {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+
+        /* Add these styles before other payment method styles */
+        .payment-methods-container {
+            max-height: 500px;
+            overflow-y: auto;
+            margin: 0 -1rem;
+            padding: 0 1rem;
+            position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: #fdbb2d #f1f1f1;
+            scroll-behavior: smooth;
+        }
+
+        .payment-methods-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .payment-methods-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .payment-methods-container::-webkit-scrollbar-thumb {
+            background: #fdbb2d;
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .payment-methods-container::-webkit-scrollbar-thumb:hover {
+            background: #f5b01d;
+        }
+
+        .payment-methods {
+            padding: 1rem 0;
+        }
+
+        /* Fade effect at the bottom */
+        .payment-methods-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to top, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Update existing payment method styles */
+        .payment-method {
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 0;
+        }
+
+        .payment-method:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .payment-methods-container {
+                max-height: 400px;
+            }
+        }
+
+        /* Add scrolling indicator */
+        .payment-methods-container.is-scrolling::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Add scroll indicator */
+        .scroll-indicator {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 40px;
+            height: 40px;
+            background: #fdbb2d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        .scroll-indicator.visible {
+            opacity: 1;
+        }
+
+        .scroll-indicator:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .scroll-indicator i {
+            color: #1a2a6c;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+
+            .subscription-scroll-container {
+                max-height: calc(100vh - 2rem);
+            }
+
+            .subscription-container {
+                padding: 1rem;
+            }
+
+            .subscription-header {
+                margin: -1rem -1rem 1rem -1rem;
+                padding: 1rem;
+            }
+        }
+
+        /* Add smooth fade effects */
+        .subscription-scroll-container::after {
+            content: '';
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to top, rgba(26, 42, 108, 0.2), transparent);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .subscription-scroll-container::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to bottom, rgba(26, 42, 108, 0.2), transparent);
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .subscription-scroll-container.is-scrolled::before {
+            opacity: 1;
+        }
+
+        .upi-content {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        /* Enhanced Payment Selection Styles */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .payment-method {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .payment-method:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #fdbb2d;
+        }
+
+        .payment-method.selected {
+            border-color: #fdbb2d;
+            background: rgba(253, 187, 45, 0.05);
+        }
+
+        .payment-method i {
+            font-size: 2.5rem;
+            color: #1a2a6c;
+            transition: all 0.3s ease;
+        }
+
+        .payment-method.selected i {
+            color: #fdbb2d;
+            transform: scale(1.1);
+        }
+
+        .payment-method span {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .payment-method .popular-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #fdbb2d;
+            color: #1a2a6c;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .payment-method:hover .popular-badge {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .payment-method .features {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+            width: 100%;
+        }
+
+        .payment-method.selected .features {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .feature-item i {
+            font-size: 1rem;
+            color: #fdbb2d;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #eee;
+            border-radius: 20px;
+            background: #fff;
+            color: #666;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-action-btn:hover {
+            background: #f8f9fa;
+            border-color: #fdbb2d;
+            color: #1a2a6c;
+        }
+
+        .quick-action-btn i {
+            font-size: 1rem;
+        }
+
+        /* Search and Filter */
+        .payment-search {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-search input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .payment-search input:focus {
+            outline: none;
+            border-color: #fdbb2d;
+            box-shadow: 0 0 0 3px rgba(253, 187, 45, 0.1);
+        }
+
+        .payment-search i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        /* Payment Method Categories */
+        .payment-categories {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scrollbar-width: none;
+        }
+
+        .payment-categories::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 20px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .category-btn.active {
+            background: #fdbb2d;
+            color: #1a2a6c;
+        }
+
+        .category-btn:hover {
+            background: #f5b01d;
+            color: #1a2a6c;
+        }
+
+        /* Recently Used Section */
+        .recently-used {
+            margin-bottom: 2rem;
+        }
+
+        .recently-used h4 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recent-methods {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            scrollbar-width: none;
+        }
+
+        .recent-methods::-webkit-scrollbar {
+            display: none;
+        }
+
+        .recent-method {
+            flex: 0 0 auto;
+            width: 120px;
+            padding: 1rem;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .recent-method:hover {
+            border-color: #fdbb2d;
+            transform: translateY(-3px);
+        }
+
+        .recent-method i {
+            font-size: 1.5rem;
+            color: #1a2a6c;
+            margin-bottom: 0.5rem;
+        }
+
+        .recent-method span {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                flex-direction: column;
+            }
+
+            .quick-action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .payment-categories {
+                margin: 0 -1rem 1.5rem -1rem;
+                padding: 0 1rem 0.5rem 1rem;
+            }
+        }
+
+        .trial-status {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem auto;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .trial-status p {
+            color: #fdbb2d;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .trial-progress {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: #fdbb2d;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+    
+    <div class="subscription-container">
+        <div class="subscription-header">
+            <h1>Choose Your Plan</h1>
+            {% if current_user.free_trials_remaining > 0 %}
+                <div class="trial-status">
+                    <p>You have {{ current_user.free_trials_remaining }} free trials remaining</p>
+                    <div class="trial-progress">
+                        <div class="progress-bar">
+                            <div class="progress" style="width: {{ (current_user.free_trials_used / 10) * 100 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <a href="{{ url_for('dashboard') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="subscription-plans">
+            <!-- Basic Plan -->
+            <div class="plan-card">
+                <div class="plan-badge">Basic</div>
+                <div class="plan-header">
+                    <h2>Basic Plan</h2>
+                    <div class="plan-price">
+                        <span class="currency">₹</span>
+                        <span class="amount">900</span>
+                        <span class="duration">/month</span>
+                    </div>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i> 5GB Storage</li>
+                    <li><i class="fas fa-check"></i> 10 Projects</li>
+                    <li><i class="fas fa-check"></i> Basic Support</li>
+                    <li><i class="fas fa-check"></i> Email Notifications</li>
+                </ul>
+                <button class="subscribe-btn" onclick="openPaymentModal('basic', 900)">Subscribe Now</button>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="plan-card featured">
+                <div class="plan-badge">Pro</div>
+                <div class="plan-header">
+                    <h2>Pro Plan</h2>
+                    <div class="plan-price">
+                        <span class="currency">₹</span>
+                        <span class="amount">1900</span>
+                        <span class="duration">/month</span>
+                    </div>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i> 20GB Storage</li>
+                    <li><i class="fas fa-check"></i> Unlimited Projects</li>
+                    <li><i class="fas fa-check"></i> Priority Support</li>
+                    <li><i class="fas fa-check"></i> Advanced Analytics</li>
+                    <li><i class="fas fa-check"></i> Custom Domain</li>
+                </ul>
+                <button class="subscribe-btn" onclick="openPaymentModal('pro', 1900)">Subscribe Now</button>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="plan-card">
+                <div class="plan-badge">Enterprise</div>
+                <div class="plan-header">
+                    <h2>Enterprise Plan</h2>
+                    <div class="plan-price">
+                        <span class="currency">₹</span>
+                        <span class="amount">4900</span>
+                        <span class="duration">/month</span>
+                    </div>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i> 100GB Storage</li>
+                    <li><i class="fas fa-check"></i> Unlimited Everything</li>
+                    <li><i class="fas fa-check"></i> 24/7 Premium Support</li>
+                    <li><i class="fas fa-check"></i> Advanced Security</li>
+                    <li><i class="fas fa-check"></i> Custom Integration</li>
+                    <li><i class="fas fa-check"></i> Dedicated Account Manager</li>
+                </ul>
+                <button class="subscribe-btn" onclick="openPaymentModal('enterprise', 4900)">Subscribe Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="payment-modal">
+        <div class="payment-modal-content">
+            <div class="payment-modal-header">
+                <h2>Complete Your Subscription</h2>
+                <button class="close-modal" onclick="closePaymentModal()">&times;</button>
+            </div>
+            
+            <div class="payment-details">
+                <h3>Select Payment Method</h3>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="filterPaymentMethods('saved')">
+                        <i class="fas fa-bookmark"></i> Saved Methods
+                    </button>
+                    <button class="quick-action-btn" onclick="filterPaymentMethods('recent')">
+                        <i class="fas fa-history"></i> Recently Used
+                    </button>
+                    <button class="quick-action-btn" onclick="filterPaymentMethods('popular')">
+                        <i class="fas fa-star"></i> Popular
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="payment-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search payment methods..." onkeyup="searchPaymentMethods(this.value)">
+                </div>
+
+                <!-- Categories -->
+                <div class="payment-categories">
+                    <button class="category-btn active" onclick="filterByCategory('all')">All Methods</button>
+                    <button class="category-btn" onclick="filterByCategory('cards')">Cards</button>
+                    <button class="category-btn" onclick="filterByCategory('upi')">UPI</button>
+                    <button class="category-btn" onclick="filterByCategory('netbanking')">Net Banking</button>
+                    <button class="category-btn" onclick="filterByCategory('wallet')">Wallets</button>
+                </div>
+
+                <!-- Recently Used -->
+                <div class="recently-used">
+                    <h4><i class="fas fa-clock"></i> Recently Used</h4>
+                    <div class="recent-methods">
+                        <div class="recent-method" onclick="selectRecentMethod('card')">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Card ending in 4567</span>
+                        </div>
+                        <div class="recent-method" onclick="selectRecentMethod('upi')">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>UPI ID</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Methods Grid -->
+                <div class="payment-methods">
+                    <!-- Credit/Debit Card -->
+                    <div class="payment-method" onclick="selectPaymentMethod('card')">
+                        <div class="payment-method-header">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Credit/Debit Card</span>
+                        </div>
+                        <div class="payment-content card-details">
+                            <div class="scrollable-content">
+                                <div class="form-group">
+                                    <label for="card-number">Card Number</label>
+                                    <div class="card-input-wrapper">
+                                        <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                                        <div class="card-type-icon">
+                                            <i class="fas fa-credit-card"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group half">
+                                        <label for="expiry-date">Expiry Date</label>
+                                        <input type="text" id="expiry-date" placeholder="MM/YY" maxlength="5" required>
+                                    </div>
+                                    <div class="form-group half">
+                                        <label for="cvv">CVV</label>
+                                        <div class="cvv-input-wrapper">
+                                            <input type="password" id="cvv" placeholder="123" maxlength="4" required>
+                                            <div class="cvv-info">
+                                                <i class="fas fa-question-circle" title="3 or 4 digit security code"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="card-name">Name on Card</label>
+                                    <input type="text" id="card-name" placeholder="John Doe" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPI -->
+                    <div class="payment-method" onclick="selectPaymentMethod('upi')">
+                        <div class="payment-method-header">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>UPI</span>
+                        </div>
+                        <div class="payment-content upi-content">
+                            <div class="scrollable-content">
+                                <div class="upi-section">
+                                    <p class="upi-title">Scan QR Code to Pay</p>
+                                    <div class="qr-container">
+                                        <img src="{{ url_for('static', filename='images/image 1.jpg') }}" alt="UPI QR Code" class="qr-code">
+                                    </div>
+                                    <div class="upi-details">
+                                        <p>Or pay using UPI ID:</p>
+                                        <div class="upi-id-container">
+                                            <span class="upi-id">payment@upi</span>
+                                            <button class="copy-btn" onclick="copyUpiId()">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="payment-amount">
+                                        <p>Amount to Pay: <span class="amount">₹<span id="upi-amount">0</span></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Net Banking -->
+                    <div class="payment-method" onclick="selectPaymentMethod('netbanking')">
+                        <div class="payment-method-header">
+                            <i class="fas fa-university"></i>
+                            <span>Net Banking</span>
+                        </div>
+                        <div class="payment-content netbanking-content">
+                            <div class="scrollable-content">
+                                <div class="popular-banks">
+                                    <h4>Popular Banks</h4>
+                                    <div class="bank-options">
+                                        <div class="bank-option">
+                                            <img src="{{ url_for('static', filename='images/sbi.png') }}" alt="SBI">
+                                            <span>SBI</span>
+                                        </div>
+                                        <div class="bank-option">
+                                            <img src="{{ url_for('static', filename='images/hdfc.png') }}" alt="HDFC">
+                                            <span>HDFC</span>
+                                        </div>
+                                        <div class="bank-option">
+                                            <img src="{{ url_for('static', filename='images/icici.png') }}" alt="ICICI">
+                                            <span>ICICI</span>
+                                        </div>
+                                        <div class="bank-option">
+                                            <img src="{{ url_for('static', filename='images/axis.png') }}" alt="Axis">
+                                            <span>Axis</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="other-banks">
+                                    <h4>Other Banks</h4>
+                                    <select class="bank-select">
+                                        <option value="">Select Bank</option>
+                                        <option value="kotak">Kotak Mahindra Bank</option>
+                                        <option value="yes">Yes Bank</option>
+                                        <option value="idfc">IDFC First Bank</option>
+                                        <option value="federal">Federal Bank</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wallet -->
+                    <div class="payment-method" onclick="selectPaymentMethod('wallet')">
+                        <div class="payment-method-header">
+                            <i class="fas fa-wallet"></i>
+                            <span>Wallet</span>
+                        </div>
+                        <div class="payment-content wallet-content">
+                            <div class="scrollable-content">
+                                <div class="wallet-options">
+                                    <div class="wallet-option">
+                                        <img src="{{ url_for('static', filename='images/paytm.png') }}" alt="Paytm">
+                                        <span>Paytm</span>
+                                    </div>
+                                    <div class="wallet-option">
+                                        <img src="{{ url_for('static', filename='images/phonepe.png') }}" alt="PhonePe">
+                                        <span>PhonePe</span>
+                                    </div>
+                                    <div class="wallet-option">
+                                        <img src="{{ url_for('static', filename='images/amazonpay.png') }}" alt="Amazon Pay">
+                                        <span>Amazon Pay</span>
+                                    </div>
+                                    <div class="wallet-option">
+                                        <img src="{{ url_for('static', filename='images/mobikwik.png') }}" alt="MobiKwik">
+                                        <span>MobiKwik</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Order Summary</h3>
+                <div class="payment-summary">
+                    <div class="payment-summary-row">
+                        <span>Plan:</span>
+                        <span id="summary-plan">Basic Plan</span>
+                    </div>
+                    <div class="payment-summary-row">
+                        <span>Duration:</span>
+                        <span>Monthly</span>
+                    </div>
+                    <div class="payment-summary-row">
+                        <span>Amount:</span>
+                        <span id="summary-amount">₹900</span>
+                    </div>
+                    <div class="payment-summary-row">
+                        <span>Total:</span>
+                        <span id="summary-total">₹900</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="proceed-btn" onclick="proceedToPayment()">Proceed to Payment</button>
+        </div>
+    </div>
+
+    <!-- Payment Confirmation Modal -->
+    <div id="payment-confirmation" class="payment-confirmation">
+        <div class="confirmation-content">
+            <!-- Success State -->
+            <div id="success-state" style="display: none;">
+                <i class="fas fa-check-circle confirmation-success"></i>
+                <h2 class="confirmation-title">Payment Successful!</h2>
+                <p>Thank you for your subscription. Your payment has been processed successfully.</p>
+                
+                <div class="confirmation-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Transaction ID</span>
+                        <span class="detail-value" id="trans-id"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Plan</span>
+                        <span class="detail-value" id="conf-plan"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Amount Paid</span>
+                        <span class="detail-value" id="conf-amount"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date</span>
+                        <span class="detail-value" id="conf-date"></span>
+                    </div>
+                </div>
+
+                <div class="confirmation-actions">
+                    <button class="confirmation-btn btn-dashboard" onclick="goToDashboard()">
+                        <i class="fas fa-tachometer-alt"></i>
+                        View Dashboard
+                    </button>
+                    <button class="confirmation-btn btn-receipt" onclick="downloadReceipt()">
+                        <i class="fas fa-download"></i>
+                        Download Receipt
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" style="display: none;">
+                <i class="fas fa-times-circle confirmation-error"></i>
+                <h2 class="confirmation-title">Payment Failed</h2>
+                <p id="error-message">We couldn't process your payment. Please try again.</p>
+                
+                <div class="confirmation-actions">
+                    <button class="confirmation-btn btn-try-again" onclick="retryPayment()">
+                        <i class="fas fa-redo"></i>
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 3D Wave Background Animation
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to window size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        // Call resize on load and resize
+        window.addEventListener('load', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Wave properties
+        const waves = [];
+        const waveCount = 3;
+        const colors = ['rgba(253, 187, 45, 0.3)', 'rgba(26, 42, 108, 0.3)', 'rgba(178, 31, 31, 0.3)'];
+        
+        // Create waves
+        for (let i = 0; i < waveCount; i++) {
+            waves.push({
+                y: canvas.height / 2,
+                length: 0.01 + (i * 0.01),
+                amplitude: 50 + (i * 20),
+                frequency: 0.01 + (i * 0.005),
+                speed: 0.02 + (i * 0.01),
+                color: colors[i],
+                offset: 0
+            });
+        }
+        
+        // Mouse position
+        let mouseX = 0;
+        let mouseY = 0;
+        let mouseRadius = 0;
+        let mouseMaxRadius = 150;
+        let mouseSpeed = 0.05;
+        
+        // Track mouse movement
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            mouseRadius = mouseMaxRadius;
+        });
+        
+        // Reset mouse radius when mouse leaves
+        canvas.addEventListener('mouseleave', () => {
+            mouseRadius = 0;
+        });
+        
+        // Draw a wave
+        function drawWave(wave) {
+            ctx.beginPath();
+            ctx.moveTo(0, wave.y);
+            
+            for (let x = 0; x < canvas.width; x++) {
+                // Calculate base wave
+                let y = wave.y + Math.sin(x * wave.length + wave.offset) * wave.amplitude;
+                
+                // Add mouse influence
+                if (mouseRadius > 0) {
+                    const dx = x - mouseX;
+                    const dy = y - mouseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < mouseRadius) {
+                        const force = (mouseRadius - distance) / mouseRadius;
+                        y += Math.sin(distance * 0.1) * force * 30;
+                    }
+                }
+                
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.closePath();
+            ctx.fillStyle = wave.color;
+            ctx.fill();
+        }
+        
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update and draw waves
+            waves.forEach(wave => {
+                wave.offset += wave.speed;
+                drawWave(wave);
+            });
+            
+            // Fade out mouse radius
+            if (mouseRadius > 0) {
+                mouseRadius -= mouseSpeed;
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Start animation
+        animate();
+
+        // Payment Modal Functions
+        let selectedPlan = '';
+        let selectedAmount = 0;
+        let selectedPaymentMethod = 'card';
+
+        function openPaymentModal(plan, amount) {
+            selectedPlan = plan;
+            selectedAmount = amount;
+            
+            // Show modal
+            document.getElementById('payment-modal').style.display = 'block';
+            
+            // Select card payment by default
+            selectPaymentMethod('card');
+            
+            // Update UPI amount
+            document.getElementById('upi-amount').textContent = amount;
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').style.display = 'none';
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            
+            // Remove selected class from all methods
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked method
+            const selectedMethod = event.currentTarget;
+            selectedMethod.classList.add('selected');
+            
+            // Show the payment content for the selected method
+            const paymentContent = selectedMethod.querySelector('.payment-content');
+            if (paymentContent) {
+                paymentContent.style.display = 'block';
+            }
+            
+            // Update UPI amount if UPI is selected
+            if (method === 'upi') {
+                document.getElementById('upi-amount').textContent = selectedAmount;
+            }
+        }
+
+        // Function to switch between payment tabs
+        function switchPaymentTab(category) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.payment-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Add active class to clicked tab
+            event.currentTarget.classList.add('active');
+            
+            // Hide all payment categories
+            document.querySelectorAll('.payment-category').forEach(cat => {
+                cat.classList.remove('active');
+            });
+            
+            // Show selected payment category
+            document.getElementById(category + '-methods').classList.add('active');
+        }
+
+        function proceedToPayment() {
+            if (selectedPaymentMethod === 'card') {
+                // Validate card details
+                const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
+                const expiryDate = document.getElementById('expiry-date').value;
+                const cvv = document.getElementById('cvv').value;
+                const cardName = document.getElementById('card-name').value;
+                
+                if (!cardNumber || !expiryDate || !cvv || !cardName) {
+                    alert('Please fill in all card details');
+                    return;
+                }
+                
+                if (cardNumber.length < 15) {
+                    alert('Please enter a valid card number');
+                    return;
+                }
+                
+                if (!expiryDate.match(/^\d{2}\/\d{2}$/)) {
+                    alert('Please enter a valid expiry date (MM/YY)');
+                    return;
+                }
+                
+                if (cvv.length < 3) {
+                    alert('Please enter a valid CVV');
+                    return;
+                }
+            }
+            
+            if (selectedPaymentMethod === 'upi') {
+                // For UPI, we'll keep the modal open to show the QR code
+                return;
+            }
+            
+            closePaymentModal();
+            initPayment(selectedPlan, selectedAmount);
+        }
+
+        function showPaymentConfirmation(response, success = true) {
+            // Hide payment modal
+            closePaymentModal();
+            
+            const confirmationModal = document.getElementById('payment-confirmation');
+            const successState = document.getElementById('success-state');
+            const errorState = document.getElementById('error-state');
+            
+            if (success) {
+                // Show success state
+                successState.style.display = 'block';
+                errorState.style.display = 'none';
+                
+                // Update confirmation details
+                document.getElementById('trans-id').textContent = response.razorpay_payment_id;
+                document.getElementById('conf-plan').textContent = selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1) + ' Plan';
+                document.getElementById('conf-amount').textContent = '₹' + selectedAmount;
+                document.getElementById('conf-date').textContent = new Date().toLocaleString();
+                
+                // Send confirmation to server
+                fetch('{{ url_for("payment_success") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        plan: selectedPlan,
+                        amount: selectedAmount
+                    })
+                });
+            } else {
+                // Show error state
+                successState.style.display = 'none';
+                errorState.style.display = 'block';
+                
+                // Update error message if provided
+                if (response && response.error) {
+                    document.getElementById('error-message').textContent = response.error.description;
+                }
+            }
+            
+            // Show confirmation modal
+            confirmationModal.style.display = 'block';
+        }
+
+        function goToDashboard() {
+            window.location.href = '{{ url_for("dashboard") }}';
+        }
+
+        function downloadReceipt() {
+            const receiptData = {
+                transactionId: document.getElementById('trans-id').textContent,
+                plan: document.getElementById('conf-plan').textContent,
+                amount: document.getElementById('conf-amount').textContent,
+                date: document.getElementById('conf-date').textContent,
+                customerName: "{{ current_user.name }}",
+                customerEmail: "{{ current_user.email }}"
+            };
+            
+            // Generate and download receipt
+            fetch('{{ url_for("generate_receipt") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(receiptData)
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `receipt-${receiptData.transactionId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            })
+            .catch(error => {
+                console.error('Error downloading receipt:', error);
+                alert('Failed to download receipt. Please try again.');
+            });
+        }
+
+        function retryPayment() {
+            // Hide confirmation modal and show payment modal
+            document.getElementById('payment-confirmation').style.display = 'none';
+            openPaymentModal(selectedPlan, selectedAmount);
+        }
+
+        function initPayment(plan, amount) {
+            var options = {
+                key: "{{ config['RAZORPAY_KEY_ID'] }}",
+                amount: amount * 100,
+                currency: "INR",
+                name: "Your Company Name",
+                description: plan.charAt(0).toUpperCase() + plan.slice(1) + " Plan Subscription",
+                image: "https://your-company-logo.png",
+                handler: function (response) {
+                    showPaymentConfirmation(response, true);
+                },
+                modal: {
+                    ondismiss: function() {
+                        showPaymentConfirmation({ error: { description: 'Payment cancelled by user.' } }, false);
+                    }
+                },
+                prefill: {
+                    name: "{{ current_user.name }}",
+                    email: "{{ current_user.email }}",
+                    contact: "{{ current_user.phone or '' }}"
+                },
+                theme: {
+                    color: "#fdbb2d"
+                }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+        }
+
+        // Format card number with spaces
+        document.getElementById('card-number').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = '';
+            
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) {
+                    formattedValue += ' ';
+                }
+                formattedValue += value[i];
+            }
+            
+            e.target.value = formattedValue;
+            
+            // Detect card type
+            const cardTypeIcon = e.target.parentElement.querySelector('.card-type-icon i');
+            const firstDigit = value[0];
+            const firstTwoDigits = value.slice(0, 2);
+            
+            cardTypeIcon.className = 'fas fa-credit-card';  // Default icon
+            
+            if (firstDigit === '4') {
+                cardTypeIcon.className = 'fab fa-cc-visa';
+            } else if (['51', '52', '53', '54', '55'].includes(firstTwoDigits)) {
+                cardTypeIcon.className = 'fab fa-cc-mastercard';
+            } else if (['34', '37'].includes(firstTwoDigits)) {
+                cardTypeIcon.className = 'fab fa-cc-amex';
+            } else if (['60', '65'].includes(firstTwoDigits)) {
+                cardTypeIcon.className = 'fab fa-cc-discover';
+            }
+        });
+
+        // Format expiry date
+        document.getElementById('expiry-date').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.slice(0, 2) + '/' + value.slice(2);
+            }
+            e.target.value = value;
+        });
+
+        // Validate CVV
+        document.getElementById('cvv').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        // Add smooth scrolling to all scrollable content
+        document.querySelectorAll('.scrollable-content').forEach(content => {
+            content.addEventListener('scroll', function() {
+                this.classList.add('scrolling');
+            });
+            
+            content.addEventListener('scrollend', function() {
+                this.classList.remove('scrolling');
+            });
+        });
+
+        // Add scroll handling for payment methods container
+        document.querySelector('.payment-methods-container').addEventListener('scroll', function() {
+            const container = this;
+            const scrollTop = container.scrollTop;
+            const scrollHeight = container.scrollHeight;
+            const clientHeight = container.clientHeight;
+            
+            // Add/remove scrolling class for visual feedback
+            if (scrollTop > 0) {
+                container.classList.add('is-scrolling');
+            } else {
+                container.classList.remove('is-scrolling');
+            }
+            
+            // Add/remove bottom fade based on scroll position
+            if (scrollTop + clientHeight >= scrollHeight - 10) {
+                container.classList.add('at-bottom');
+            } else {
+                container.classList.remove('at-bottom');
+            }
+        });
+
+        // Smooth scroll to selected payment method
+        function scrollToPaymentMethod(method) {
+            const container = document.querySelector('.payment-methods-container');
+            const methodElement = document.querySelector(`.payment-method[data-method="${method}"]`);
+            if (methodElement) {
+                container.scrollTo({
+                    top: methodElement.offsetTop - container.offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Add UPI ID copy functionality
+        function copyUpiId() {
+            const upiId = document.querySelector('.upi-id').textContent;
+            navigator.clipboard.writeText(upiId).then(() => {
+                const copyBtn = document.querySelector('.copy-btn');
+                const originalIcon = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalIcon;
+                }, 2000);
+            });
+        }
+
+        // Add these new functions to your existing JavaScript
+        function filterPaymentMethods(type) {
+            const methods = document.querySelectorAll('.payment-method');
+            methods.forEach(method => {
+                method.style.display = 'none';
+            });
+
+            switch(type) {
+                case 'saved':
+                    // Show saved payment methods
+                    break;
+                case 'recent':
+                    // Show recently used methods
+                    break;
+                case 'popular':
+                    // Show popular methods
+                    break;
+            }
+        }
+
+        function searchPaymentMethods(query) {
+            const methods = document.querySelectorAll('.payment-method');
+            methods.forEach(method => {
+                const text = method.textContent.toLowerCase();
+                method.style.display = text.includes(query.toLowerCase()) ? 'flex' : 'none';
+            });
+        }
+
+        function filterByCategory(category) {
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const methods = document.querySelectorAll('.payment-method');
+            methods.forEach(method => {
+                if (category === 'all' || method.getAttribute('data-category') === category) {
+                    method.style.display = 'flex';
+                } else {
+                    method.style.display = 'none';
+                }
+            });
+        }
+
+        function selectRecentMethod(type) {
+            // Handle recent method selection
+            selectPaymentMethod(type);
+        }
+    </script>
+</body>
+</html> 
